@@ -1,0 +1,39 @@
+using EFT.UI.DragAndDrop;
+using HarmonyLib;
+using ItemPurposeCheckmarks.Helpers;
+using SPT.Reflection.Patching;
+using System.Reflection;
+
+namespace ItemPurposeCheckmarks.Patches
+{
+    // Based on AllQuestsCheckmarks by ZGFueDkx (GPL-3.0)
+    // Swaps the inspect window's FiR checkmark sprite for our white checkmark so it can be tinted.
+    internal class ItemSpecificationPanelPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(EFT.UI.ItemSpecificationPanel), nameof(EFT.UI.ItemSpecificationPanel.method_2));
+        }
+
+        [PatchPrefix]
+        static bool Prefix(ref QuestItemViewPanel ____questItemViewPanel)
+        {
+            if (Helpers.Assets.Checkmark is null || ____questItemViewPanel is null)
+            {
+                return true;
+            }
+
+            try
+            {
+                FieldInfo info = typeof(QuestItemViewPanel).GetField("_foundInRaidSprite", BindingFlags.NonPublic | BindingFlags.Instance);
+                info.SetValue(____questItemViewPanel, Helpers.Assets.Checkmark);
+            }
+            catch
+            {
+                Plugin.LogSource?.LogError("Failed to set custom checkmark in ItemSpecificationPanel!");
+            }
+
+            return true;
+        }
+    }
+}
