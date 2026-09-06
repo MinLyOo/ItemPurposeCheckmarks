@@ -101,7 +101,8 @@ namespace ItemPurposeCheckmarks.Patches
                         continue;
                     }
 
-                    activeQuestsTooltip += $"\n{indent}<color={activeColor}>{quest.Template.Name}</color>: ";
+                    string trader = QuestsData.GetTraderName(quest.Template.Id);
+                    activeQuestsTooltip += $"\n{indent}{(string.IsNullOrEmpty(trader) ? "" : trader + ": ")}<color={activeColor}>{quest.Template.Name}</color>: ";
 
                     if (quest.Condition is ConditionHandoverItem condition
                         && profile.TaskConditionCounters.TryGetValue(condition.id, out TaskConditionCounter counter))
@@ -183,7 +184,8 @@ namespace ItemPurposeCheckmarks.Patches
                         }
                     }
 
-                    futureQuestsTooltip += $"\n{indent}<color={futureColor}>{questName}</color>: {quest.Value.Count.Count}";
+                    string trader = QuestsData.GetTraderName(quest.Key);
+                    futureQuestsTooltip += $"\n{indent}{(string.IsNullOrEmpty(trader) ? "" : trader + ": ")}<color={futureColor}>{questName}</color>: {quest.Value.Count.Count}";
 
                     if (showNonFir)
                     {
@@ -245,7 +247,7 @@ namespace ItemPurposeCheckmarks.Patches
 
                     if (!Settings.OnlyShowHideoutOnFir!.Value || item.MarkedAsSpawnedInSession)
                     {
-                        ____tooltipText += "\n" + string.Format("aqc_hideout".Localized(null), hideoutNeed.Areas.Count);
+                        ____tooltipText += "\n" + string.Format("aqc_hideout".Localized(null), hideoutNeed.TotalPossessed, hideoutNeed.TotalRequired);
 
                         string hideoutColor = Settings.HideoutColor!.GetHexColor(!useCustomTextColors);
                         string fulfilledColor = Settings.HideoutFulfilledColor!.GetHexColor(!useCustomTextColors);
@@ -253,7 +255,7 @@ namespace ItemPurposeCheckmarks.Patches
                         foreach (HideoutHelper.HideoutAreaEntry area in hideoutNeed.Areas)
                         {
                             string color = area.Fulfilled ? fulfilledColor : hideoutColor;
-                            ____tooltipText += $"\n{indent}<color={color}>{string.Format("aqc_hideout_entry".Localized(null), area.AreaName, area.Level, hideoutNeed.PossessedCount, hideoutNeed.RequiredCount)}</color>";
+                            ____tooltipText += $"\n{indent}<color={color}>{string.Format("aqc_hideout_entry".Localized(null), area.AreaName, area.Level, area.PossessedCount, area.RequiredCount)}</color>";
                         }
                     }
                 }

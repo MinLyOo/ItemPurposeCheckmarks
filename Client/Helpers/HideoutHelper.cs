@@ -12,21 +12,24 @@ namespace ItemPurposeCheckmarks.Helpers
     {
         /// <summary>
         /// Result of checking whether an item is needed for any hideout upgrade.
+        /// Each area keeps its own requirement; totals are aggregated for the summary line.
         /// </summary>
         public class HideoutNeed
         {
-            public bool FoundNeeded;      // Materials are still missing
+            public bool FoundNeeded;      // Materials are still missing (any area)
             public bool FoundFulfilled;   // Already have enough for (at least) one upgrade
-            public int PossessedCount;
-            public int RequiredCount;
+            public int TotalPossessed;    // Global possession of this item
+            public int TotalRequired;     // Sum of every area's requirement
             public readonly List<HideoutAreaEntry> Areas = [];
         }
 
         public class HideoutAreaEntry(string areaName, int level, bool fulfilled)
         {
             public string AreaName = areaName;
-            public int Level = level;
+            public int Level = level;             // The upgrade level this entry refers to
             public bool Fulfilled = fulfilled;
+            public int PossessedCount;
+            public int RequiredCount;
         }
 
         /// <summary>
@@ -85,6 +88,11 @@ namespace ItemPurposeCheckmarks.Helpers
 
                 string areaName = areaData.Template.Name?.Localized() ?? "Unknown area";
 
+                // Accumulate this area's requirement separately from others.
+                int areaRequired = 0;
+                int areaPossessed = 0;
+                bool areaAllFulfilled = true;
+
                 foreach (Stage stage in futureStages)
                 {
                     RelatedRequirements? requirements = stage.Requirements;
@@ -105,25 +113,42 @@ namespace ItemPurposeCheckmarks.Helpers
                             continue;
                         }
 
-                        result.RequiredCount += itemRequirement.IntCount;
-                        result.PossessedCount = itemRequirement.UserItemsCount;
+                        // Each area reports against the item's global possession count.
+                        areaRequired += itemRequirement.IntCount;
+                        areaPossessed = itemRequirement.UserItemsCount;
 
-                        if (itemRequirement.Fulfilled)
+                        if (!itemRequirement.Fulfilled)
                         {
-                            if (!result.FoundNeeded && !result.FoundFulfilled)
-                            {
-                                result.FoundFulfilled = true;
-                            }
-
-                            result.Areas.Add(new HideoutAreaEntry(areaName, stage.Level, true));
-                        }
-                        else
-                        {
-                            result.FoundNeeded = true;
-                            result.Areas.Add(new HideoutAreaEntry(areaName, stage.Level, false));
+                            areaAllFulfilled = false;
                         }
                     }
                 }
+
+                if (areaRequired <= 0)
+                {
+                    continue;
+                }
+
+                result.Areas.Add(new HideoutAreaEntry(areaName, futureStages[0].Level, areaAllFulfilled)
+                {
+                    PossessedCount = areaPossessed,
+                    RequiredCount = areaRequired,
+                });
+
+                result.TotalRequired += areaRequired;
+                result.TotalPossessed = areaPossessed;
+
+                if (!areaAllFulfilled)
+                {
+                    result.FoundNeeded = true;
+                }
+            }
+
+            // If at least one area uses this item and none is missing materials,
+            // it is "ready" for the next upgrade (lower priority than a need).
+            if (result.Areas.Count > 0 && !result.FoundNeeded)
+            {
+                result.FoundFulfilled = true;
             }
 
             return result;

@@ -37,5 +37,30 @@ namespace ItemPurposeCheckmarks.Helpers
 
             return templateId.ToString();
         }
+
+        /// <summary>
+        /// Resolves the localized trader display name from a trader id.
+        /// Trader names live under the localization key "{traderId} Nickname".
+        /// Falls back to the raw id when unknown.
+        /// </summary>
+        public static string GetTraderName(MongoID traderId)
+        {
+            try
+            {
+                string key = traderId.ToString() + " Nickname";
+                string localized = key.Localized(null);
+
+                if (!string.IsNullOrEmpty(localized) && localized != key)
+                {
+                    return localized;
+                }
+            }
+            catch
+            {
+                // Fall through to the raw id below.
+            }
+
+            return traderId.ToString();
+        }
     }
 }

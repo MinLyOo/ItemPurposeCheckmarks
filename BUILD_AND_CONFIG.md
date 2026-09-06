@@ -2,6 +2,11 @@
 
 独立任务/用途勾选 Mod。继承 AllQuestsCheckmarks（AQC, GPL-3.0）的全部能力，并整合 MoreCheckmarks（MCM, MIT）的信息维度。
 
+功能亮点：
+- 任务勾选（继承 AQC 全部能力）
+- 藏身处升级材料按设施显示（来自 MCM，`Show hideout upgrade materials` 选项控制）
+- 商人名对齐显示（服务端路由 `/item-purpose-checkmarks/trader-names` 提供）
+
 - 客户端：BepInEx 插件（`netstandard2.1`）
 - 服务端：SPT 编译型 mod（`net10.0`，SPTushonka 4.1.3）
 - 版本：1.0.0（SPT ≥ 4.1，测试 4.1.3）

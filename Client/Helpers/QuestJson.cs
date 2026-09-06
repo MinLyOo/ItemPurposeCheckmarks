@@ -24,6 +24,9 @@ namespace ItemPurposeCheckmarks.Helpers
 
         [JsonProperty("name")]
         public string? LocalizedName { get; set; }
+
+        [JsonProperty("traderId")]
+        public MongoID? TraderId { get; set; }
     }
 
     internal class QuestConditions

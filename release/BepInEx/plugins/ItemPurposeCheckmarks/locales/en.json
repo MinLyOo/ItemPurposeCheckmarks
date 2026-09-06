@@ -7,7 +7,7 @@
 	"aqc_fir": "FiR",
 	"aqc_nonfir": "Non-FiR",
 	"aqc_squad_quests": "Required for squad:",
-	"aqc_hideout": "Hideout upgrades ({0}):",
+	"aqc_hideout": "Hideout upgrades (total {0}/{1} needed):",
 	"aqc_hideout_entry": "{0} Lv{1} ({2}/{3})",
 	"aqc_barters": "Barters:",
 	"aqc_barter_for": "{0} x {1} for {2}",

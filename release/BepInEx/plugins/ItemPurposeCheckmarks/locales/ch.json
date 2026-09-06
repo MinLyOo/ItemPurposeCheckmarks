@@ -7,7 +7,7 @@
 	"aqc_fir": "战局中找到",
 	"aqc_nonfir": "非战局中找到",
 	"aqc_squad_quests": "小队所需:",
-	"aqc_hideout": "藏身处升级 ({0}):",
+	"aqc_hideout": "藏身处升级（共计需要 {0}/{1} 个）:",
 	"aqc_hideout_entry": "{0} Lv{1} ({2}/{3})",
 	"aqc_barters": "交易:",
 	"aqc_barter_for": "{0} x {1} 换 {2}",
@@ -15,6 +15,6 @@
 	"aqc_craft_into": "可制造: {0}",
 	"aqc_wishlist": "愿望单中",
 	"aqc_on_you": "身上持有: <color=#66CCFF>{0}</color>",
-	"aqc_prereqs": " ({0} 个前置{1})",
+	"aqc_prereqs": " ({0} 个前置)",
 	"aqc_custom_trader": "自定义商人"
 }

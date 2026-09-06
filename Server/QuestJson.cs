@@ -32,6 +32,9 @@ namespace ItemPurposeCheckmarks
 
         [JsonPropertyName("name")]
         public string LocalizedName { get; init; } = quest.Name;
+
+        [JsonPropertyName("traderId")]
+        public MongoId TraderId { get; init; } = quest.TraderId;
     }
 
     internal class QuestConditions

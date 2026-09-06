@@ -43,6 +43,9 @@ namespace ItemPurposeCheckmarks.Helpers
         public static Dictionary<MongoID, ItemData> QuestItemsByItemId = [];
         public static Dictionary<MongoID, Dictionary<MongoID, QuestItems>> QuestItemsByQuestId = [];
 
+        // quest id -> trader id (for showing the assigning trader in the tooltip)
+        public static Dictionary<MongoID, MongoID> QuestTraderById = [];
+
         // Quest prerequisite dependency graph (direct prereqs per quest)
         public static Dictionary<MongoID, QuestRequirements> QuestDependencyList = [];
         private static readonly Dictionary<MongoID, int> _prereqCountCache = [];
@@ -331,6 +334,7 @@ namespace ItemPurposeCheckmarks.Helpers
 
             QuestItemsByItemId.Clear();
             QuestItemsByQuestId.Clear();
+            QuestTraderById.Clear();
 
             for (int i = 0; i < _questsData!.Count; ++i)
             {
@@ -345,6 +349,11 @@ namespace ItemPurposeCheckmarks.Helpers
                 {
                     Plugin.LogSource?.LogError("Quest[_id] is null!");
                     continue;
+                }
+
+                if (quest.TraderId is MongoID traderId)
+                {
+                    QuestTraderById[questId] = traderId;
                 }
 
                 if (_unreachableQuests.Contains(questId))
@@ -514,6 +523,19 @@ namespace ItemPurposeCheckmarks.Helpers
             {
                 items.NonFir += count;
             }
+        }
+
+        /// <summary>
+        /// Localized trader name that assigned the given quest, or empty if unknown.
+        /// </summary>
+        public static string GetTraderName(MongoID questId)
+        {
+            if (QuestTraderById.TryGetValue(questId, out MongoID traderId))
+            {
+                return Utils.GetTraderName(traderId);
+            }
+
+            return "";
         }
 
         public static void RemoveQuest(MongoID questId)

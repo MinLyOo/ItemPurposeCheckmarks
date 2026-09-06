@@ -7,7 +7,7 @@
 	"aqc_fir": "FiR",
 	"aqc_nonfir": "Nie FiR",
 	"aqc_squad_quests": "Wymagane dla drużyny:",
-	"aqc_hideout": "Ulepszenia kryjówki ({0}):",
+	"aqc_hideout": "Ulepszenia kryjówki (łącznie {0}/{1}):",
 	"aqc_hideout_entry": "{0} Poz. {1} ({2}/{3})",
 	"aqc_barters": "Wymiany:",
 	"aqc_barter_for": "{0} x {1} za {2}",

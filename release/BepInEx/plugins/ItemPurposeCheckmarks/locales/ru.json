@@ -7,7 +7,7 @@
     "aqc_fir": "Из рейда",
     "aqc_nonfir": "Не из рейда",
     "aqc_squad_quests": "Требуется для команды:",
-    "aqc_hideout": "Улучшение убежища ({0}):",
+    "aqc_hideout": "Улучшение убежища (всего {0}/{1}):",
     "aqc_hideout_entry": "{0} Ур.{1} ({2}/{3})",
     "aqc_barters": "Обмен:",
     "aqc_barter_for": "{0} x {1} за {2}",
