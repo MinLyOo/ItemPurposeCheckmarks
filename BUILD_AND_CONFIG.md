@@ -115,6 +115,9 @@ Compress-Archive -Path .\release\* -DestinationPath .\ItemPurposeCheckmarks-manu
 进入游戏后按 F12（BepInEx 配置界面）即可修改；也可直接编辑
 `{游戏目录}/BepInEx/config/com.kee.itempurposecheckmarks.cfg`。
 
+> F12 界面已汉化，且每个信息维度（藏身处/交易/制造/愿望单/前置数/身上持有/Take 染色）都有独立的“显示”开关。
+> 升级版本后若想清理旧配置，可删除上面这个 `.cfg` 文件，游戏启动时会用默认值重新生成中文配置。
+
 五个分组：
 
 ### General（通用）
