@@ -33,6 +33,8 @@ namespace ItemPurposeCheckmarks.Helpers
         public static ConfigEntry<bool>? ShowPrereqCount;
         public static ConfigEntry<bool>? ShowOnYouCount;
         public static ConfigEntry<bool>? ColorizeTakeAction;
+        public static ConfigEntry<bool>? ShowReferencePrice;
+        public static ConfigEntry<string>? ReferencePriceMode;
 
         public static ConfigEntry<Color>? CheckmarkColor;
         public static ConfigEntry<Color>? NonFirColor;
@@ -50,6 +52,7 @@ namespace ItemPurposeCheckmarks.Helpers
         public static ConfigEntry<Color>? WishlistColor;
         public static ConfigEntry<Color>? BarterColor;
         public static ConfigEntry<Color>? CraftColor;
+        public static ConfigEntry<Color>? ReferencePriceColor;
 
         public static void Init(ConfigFile config)
         {
@@ -161,6 +164,19 @@ namespace ItemPurposeCheckmarks.Helpers
                 "按勾选颜色为战局内散货的“Take”交互按钮染色"
             );
 
+            ShowReferencePrice = purpose.BindConfig(
+                "显示物品参考价",
+                true,
+                "在 tooltip 顶部显示该物品的跳蚤市场参考价格（来源：当前跳蚤市场 offer 的最低/平均/最高价）"
+            );
+
+            ReferencePriceMode = purpose.BindConfig(
+                "参考价档位",
+                "平均价",
+                "选择参考价使用哪个档位：最低价 / 平均价 / 最高价",
+                acceptableValue: new AcceptableValueList<string>(["最低价", "平均价", "最高价"])
+            );
+
             /*
              * 勾选颜色
              */
@@ -237,6 +253,12 @@ namespace ItemPurposeCheckmarks.Helpers
                 "制造勾选颜色",
                 "#b388ff",
                 "物品是制造配方原料时的勾选颜色"
+            );
+
+            ReferencePriceColor = purpose.BindColor(
+                "参考价文本颜色",
+                "#ffd400",
+                "tooltip 中参考价数字的高亮颜色"
             );
 
             /*

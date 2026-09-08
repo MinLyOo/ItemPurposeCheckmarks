@@ -21,6 +21,10 @@ namespace ItemPurposeCheckmarks.Patches
     // crafting recipes and wishlist. All feed the single QuestsHelper checkmark arbiter.
     internal class QuestItemViewPanelPatch : ModulePatch
     {
+        // Warm amber used to highlight trader names in both quest and barter tooltip
+        // lines, so NPC names stand out from the quest/item text colors.
+        private const string TraderHighlight = "#FFC24B";
+
         protected override MethodBase GetTargetMethod()
         {
             return AccessTools.Method(typeof(QuestItemViewPanel), nameof(QuestItemViewPanel.Show));
@@ -47,6 +51,13 @@ namespace ItemPurposeCheckmarks.Patches
             if (item.MarkedAsSpawnedInSession)
             {
                 ____tooltipText = "Item found in raid".Localized(null) + "\n";
+            }
+
+            // Flea market reference price, placed above the "in stash" count.
+            string? priceLine = PriceHelper.GetPriceLine(item.TemplateId);
+            if (priceLine != null)
+            {
+                ____tooltipText += string.Format("aqc_price".Localized(null), priceLine) + "\n";
             }
 
             bool showNonFir = Settings.IncludeNonFir!.Value;
@@ -102,7 +113,9 @@ namespace ItemPurposeCheckmarks.Patches
                     }
 
                     string trader = QuestsData.GetTraderName(quest.Template.Id);
-                    activeQuestsTooltip += $"\n{indent}{(string.IsNullOrEmpty(trader) ? "" : trader + ": ")}<color={activeColor}>{quest.Template.Name}</color>: ";
+                    activeQuestsTooltip += string.IsNullOrEmpty(trader)
+                        ? $"\n{indent}<color={activeColor}>{quest.Template.Name}</color>: "
+                        : $"\n{indent}<color={TraderHighlight}>{trader}</color>: <color={activeColor}>{quest.Template.Name}</color>: ";
 
                     if (quest.Condition is ConditionHandoverItem condition
                         && profile.TaskConditionCounters.TryGetValue(condition.id, out TaskConditionCounter counter))
@@ -185,7 +198,9 @@ namespace ItemPurposeCheckmarks.Patches
                     }
 
                     string trader = QuestsData.GetTraderName(quest.Key);
-                    futureQuestsTooltip += $"\n{indent}{(string.IsNullOrEmpty(trader) ? "" : trader + ": ")}<color={futureColor}>{questName}</color>: {quest.Value.Count.Count}";
+                    futureQuestsTooltip += string.IsNullOrEmpty(trader)
+                        ? $"\n{indent}<color={futureColor}>{questName}</color>: {quest.Value.Count.Count}"
+                        : $"\n{indent}<color={TraderHighlight}>{trader}</color>: <color={futureColor}>{questName}</color>: {quest.Value.Count.Count}";
 
                     if (showNonFir)
                     {
@@ -266,33 +281,41 @@ namespace ItemPurposeCheckmarks.Patches
             if (Settings.ShowBarter!.Value)
             {
                 List<List<KeyValuePair<MongoID, int>>> bartersByTrader = BarterHelper.GetBarters(item.TemplateId);
-                bool any = false;
 
+                int totalOffers = 0;
                 for (int i = 0; i < bartersByTrader.Count; ++i)
                 {
-                    if (bartersByTrader[i].Count == 0)
-                    {
-                        continue;
-                    }
-
-                    any = true;
-
-                    if (i < BarterHelper.TraderNames.Length)
-                    {
-                        ____tooltipText += $"\n{indent}{BarterHelper.TraderNames[i]}:";
-                    }
-
-                    foreach (KeyValuePair<MongoID, int> offer in bartersByTrader[i])
-                    {
-                        string productName = Helpers.Utils.GetItemName(offer.Key);
-                        ____tooltipText += $"\n{indent}  {string.Format("aqc_barter_for".Localized(null), item.Name, offer.Value, productName)}";
-                    }
+                    totalOffers += bartersByTrader[i].Count;
                 }
 
-                if (any)
+                if (totalOffers > 0)
                 {
                     barter = true;
                     ____tooltipText += "\n" + "aqc_barters".Localized(null);
+
+                    // Trader and product are colorized here (not inside the locale) so the
+                    // highlight follows the Barter color setting.
+                    string productColor = Settings.BarterColor!.GetHexColor();
+
+                    for (int i = 0; i < bartersByTrader.Count; ++i)
+                    {
+                        if (bartersByTrader[i].Count == 0)
+                        {
+                            continue;
+                        }
+
+                        string traderName = i < BarterHelper.TraderNames.Length ? BarterHelper.TraderNames[i] : $"Trader {i}";
+                        string traderHighlight = $"<color={TraderHighlight}>{traderName}</color>";
+
+                        foreach (KeyValuePair<MongoID, int> offer in bartersByTrader[i])
+                        {
+                            string productName = Helpers.Utils.GetItemName(offer.Key);
+                            string productHighlight = $"<color={productColor}>{productName}</color>";
+                            // Only this item's exchange is shown - when a product needs
+                            // multiple barter currencies we never enumerate the others.
+                            ____tooltipText += $"\n{indent}{string.Format("aqc_barter_line".Localized(null), offer.Value, traderHighlight, productHighlight)}";
+                        }
+                    }
                 }
             }
 

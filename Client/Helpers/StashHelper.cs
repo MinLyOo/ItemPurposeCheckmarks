@@ -21,6 +21,13 @@ namespace ItemPurposeCheckmarks.Helpers
 
         private static readonly Dictionary<MongoID, ItemsCount> _itemsCache = [];
 
+        // Guards the in-raid one-shot rebuild so a failed attempt (stash not reachable
+        // mid-raid) is not retried on every tooltip.
+        private static bool _raidRebuildAttempted;
+
+        // Guards the main-menu poll so it attempts the early build only once.
+        private static bool _earlyWarmAttempted;
+
         public class ItemsCount
         {
             public int Fir;
@@ -34,9 +41,22 @@ namespace ItemPurposeCheckmarks.Helpers
             Profile profile = ClientAppUtils.GetClientApp().GetClientBackEndSession().Profile;
             IEnumerable<Item> items;
 
+            // Diagnostics for the in-raid "stash shows 0" bug (only with debug logging on).
+            if (Settings.ShowDebug!.Value)
+            {
+                Plugin.LogDebug($"StashCount item={itemId} inRaid={RaidUtils.IsInRaid()} cacheSize={_itemsCache.Count}");
+            }
+
             if (RaidUtils.IsInRaid())
             {
-                if (_itemsCache != null && _itemsCache.TryGetValue(itemId, out ItemsCount cached))
+                // When the pre-raid snapshot is missing entirely (e.g. the raid never went
+                // through LocalGame.Create) try to rebuild once from reachable stash data.
+                if (_itemsCache.Count == 0)
+                {
+                    TryRebuildCache();
+                }
+
+                if (_itemsCache.TryGetValue(itemId, out ItemsCount cached))
                 {
                     itemsCount.Fir += cached.Fir;
                     itemsCount.NonFir += cached.NonFir;
@@ -51,6 +71,14 @@ namespace ItemPurposeCheckmarks.Helpers
             }
             else
             {
+                // Outside a raid the full profile (stash included) is always reachable.
+                // Keep a snapshot so a later raid still shows the pre-raid stash counts
+                // even if the stash becomes unreachable once the raid profile loads.
+                if (_itemsCache.Count == 0)
+                {
+                    BuildItemsCache();
+                }
+
                 items = profile.Inventory.GetPlayerItems().Where(i => i.TemplateId == itemId);
             }
 
@@ -67,6 +95,24 @@ namespace ItemPurposeCheckmarks.Helpers
             }
 
             return itemsCount;
+        }
+
+        private static void TryRebuildCache()
+        {
+            if (_raidRebuildAttempted)
+            {
+                return;
+            }
+
+            _raidRebuildAttempted = true;
+
+            BuildItemsCache();
+
+            // Successfully rebuilt - allow another attempt for a future raid.
+            if (_itemsCache.Count > 0)
+            {
+                _raidRebuildAttempted = false;
+            }
         }
 
         /// <summary>
@@ -96,50 +142,105 @@ namespace ItemPurposeCheckmarks.Helpers
             return count;
         }
 
+        public static bool IsCacheReady => _itemsCache.Count > 0;
+
+        /// <summary>
+        /// Called periodically from Plugin.Update while outside a raid. Once the
+        /// profile is available (main menu) this builds the stash cache and warms
+        /// the flea prices for the whole stash - long before the player opens the
+        /// stash/search screen, so the first tooltip already shows the price.
+        /// </summary>
+        public static void TryWarmInMenu()
+        {
+            if (_earlyWarmAttempted || _itemsCache.Count > 0)
+            {
+                return;
+            }
+
+            try
+            {
+                if (RaidUtils.IsInRaid())
+                {
+                    return;
+                }
+
+                // Profile not loaded yet (e.g. still on the profile selection
+                // screen) - silently retry on a later tick.
+                var session = ClientAppUtils.GetClientApp()?.GetClientBackEndSession();
+                if (session?.Profile is null)
+                {
+                    return;
+                }
+
+                _earlyWarmAttempted = true;
+                BuildItemsCache();
+            }
+            catch
+            {
+                // Not ready yet - retry on a later tick.
+            }
+        }
+
         public static void BuildItemsCache()
         {
             _itemsCache.Clear();
 
-            Profile profile = ClientAppUtils.GetClientApp().GetClientBackEndSession().Profile;
-            IEnumerable<Item> itemsToCache = profile.Inventory.GetPlayerItems(EPlayerItems.HideoutStashes);
-            IEnumerable<Item>? stashItems = Singleton<HideoutRepresentation>.Instance?.AllStashItems;
-
-            if (stashItems != null)
+            try
             {
-                itemsToCache = itemsToCache.Concat(stashItems);
-            }
+                Profile profile = ClientAppUtils.GetClientApp().GetClientBackEndSession().Profile;
+                IEnumerable<Item> itemsToCache = profile.Inventory.GetPlayerItems(EPlayerItems.HideoutStashes);
+                IEnumerable<Item>? stashItems = Singleton<HideoutRepresentation>.Instance?.AllStashItems;
 
-            foreach (Item item in itemsToCache)
-            {
-                if (_itemsCache.TryGetValue(item.TemplateId, out ItemsCount itemsCount))
+                if (stashItems != null)
                 {
-                    if (item.MarkedAsSpawnedInSession)
+                    itemsToCache = itemsToCache.Concat(stashItems);
+                }
+
+                foreach (Item item in itemsToCache)
+                {
+                    if (_itemsCache.TryGetValue(item.TemplateId, out ItemsCount itemsCount))
                     {
-                        itemsCount.Fir += item.StackObjectsCount;
+                        if (item.MarkedAsSpawnedInSession)
+                        {
+                            itemsCount.Fir += item.StackObjectsCount;
+                        }
+                        else
+                        {
+                            itemsCount.NonFir += item.StackObjectsCount;
+                        }
                     }
                     else
                     {
-                        itemsCount.NonFir += item.StackObjectsCount;
+                        ItemsCount count = new();
+
+                        if (item.MarkedAsSpawnedInSession)
+                        {
+                            count.Fir = item.StackObjectsCount;
+                        }
+                        else
+                        {
+                            count.NonFir = item.StackObjectsCount;
+                        }
+
+                        _itemsCache.Add(item.TemplateId, count);
                     }
                 }
-                else
-                {
-                    ItemsCount count = new();
 
-                    if (item.MarkedAsSpawnedInSession)
-                    {
-                        count.Fir = item.StackObjectsCount;
-                    }
-                    else
-                    {
-                        count.NonFir = item.StackObjectsCount;
-                    }
+                Plugin.LogSource?.LogInfo($"Items cache built. Total items in cache: {_itemsCache.Count}");
 
-                    _itemsCache.Add(item.TemplateId, count);
-                }
+                // Warm the flea reference prices for everything we found in the
+                // stash so tooltips never trigger a blocking request later.
+                PriceHelper.QueuePrefetch(_itemsCache.Keys);
+            }
+            catch (System.Exception ex)
+            {
+                Plugin.LogSource?.LogError($"Failed to build items cache: {ex.Message}");
             }
 
-            Plugin.LogSource?.LogInfo($"Items cache built. Total items in cache: {_itemsCache.Count}");
+            if (_itemsCache.Count == 0)
+            {
+                Plugin.LogSource?.LogWarning("Items cache is empty - stash items may not be reachable right now.");
+            }
         }
     }
 }

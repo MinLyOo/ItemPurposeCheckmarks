@@ -53,7 +53,9 @@ namespace ItemPurposeCheckmarks.Patches
                     InteractionAction action = actions[i];
                     if (action is not null && action.Name == "Take")
                     {
-                        action.Name = "<font=\"BenderBold\"><color=#" + ColorUtility.ToHtmlStringRGB(color.Value) + ">Take</color></font>";
+                        // No <font> tag: that tag surfaces as a literal <FONT='...'> in the
+                        // in-raid action menu. A plain color tag is enough to tint the label.
+                        action.Name = "<color=#" + ColorUtility.ToHtmlStringRGB(color.Value) + ">Take</color>";
                         break;
                     }
                 }

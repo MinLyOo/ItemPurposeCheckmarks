@@ -5,6 +5,8 @@ using BepInEx.Bootstrap;
 using BepInEx.Logging;
 using System.IO;
 using System.Reflection;
+using UnityEngine;
+using ZGFueDkx.ZGCLib.helpers;
 
 namespace ItemPurposeCheckmarks
 {
@@ -32,14 +34,16 @@ namespace ItemPurposeCheckmarks
             Settings.Init(Config);
             Helpers.Assets.LoadAssets();
 
-            if (isFikaInstalled)
+            // The "-Fika" bridge assembly is optional and only adds coop/squad events.
+            if (isFikaInstalled && File.Exists(Path.Combine(modPath, "ItemPurposeCheckmarks-Fika.dll")))
             {
                 FikaBridge.Init();
             }
-            else
-            {
-                new LocalGameStartPatch().Enable();
-            }
+
+            // Always snapshot the stash before a raid starts, regardless of Fika being
+            // installed - otherwise the in-raid "in stash" count stays zero when the
+            // raid is created through LocalGame.Create.
+            new LocalGameStartPatch().Enable();
 
             new QuestClassPatch().Enable();
             new ProfileSelectionPatch().Enable();
@@ -57,6 +61,28 @@ namespace ItemPurposeCheckmarks
             {
                 LogSource?.LogDebug(msg);
             }
+        }
+
+        // Polls (only while outside a raid) so the stash cache + flea price warmup
+        // starts right after the profile loads in the main menu - before the player
+        // opens the stash/search screen and hovers anything.
+        private float _warmCheckTimer = 1f;
+
+        private void Update()
+        {
+            if (RaidUtils.IsInRaid() || StashHelper.IsCacheReady)
+            {
+                return;
+            }
+
+            _warmCheckTimer -= Time.unscaledDeltaTime;
+            if (_warmCheckTimer > 0f)
+            {
+                return;
+            }
+
+            _warmCheckTimer = 2f;
+            StashHelper.TryWarmInMenu();
         }
     }
 }

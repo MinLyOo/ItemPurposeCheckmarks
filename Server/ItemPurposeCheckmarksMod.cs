@@ -7,9 +7,11 @@ using SPTarkov.Server.Core.Helpers.Traders;
 using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Eft.Common;
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
+using SPTarkov.Server.Core.Models.Eft.Ragfair;
 using SPTarkov.Server.Core.Models.Enums;
 using SPTarkov.Server.Core.Models.Spt.Config;
 using SPTarkov.Server.Core.Models.Spt.Tables;
+using SPTarkov.Server.Core.Controllers;
 using SPTarkov.Server.Core.Services.Commerce;
 using SPTarkov.Server.Core.Utils;
 using System.Reflection;
@@ -29,6 +31,7 @@ namespace ItemPurposeCheckmarks
         TraderHelper traderHelper,
         FenceService fenceService,
         HideoutTable hideoutTable,
+        RagfairController ragfairController,
         ISptLogger<ItemPurposeCheckmarksMod> logger
     )
     {
@@ -39,7 +42,12 @@ namespace ItemPurposeCheckmarks
         private readonly TraderHelper _traderHelper = traderHelper;
         private readonly FenceService _fenceService = fenceService;
         private readonly HideoutTable _hideoutTable = hideoutTable;
+        private readonly RagfairController _ragfairController = ragfairController;
         private readonly ISptLogger<ItemPurposeCheckmarksMod> _logger = logger;
+
+        private readonly object _priceLock = new();
+        private readonly Dictionary<MongoId, (double Min, double? Avg, double Max)> _fleaPriceCache = [];
+        private Dictionary<MongoId, double>? _staticPrices;
 
         private readonly string _modFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? "";
         private readonly ServerConfig _config = ServerConfig.LoadOrCreate(
@@ -254,6 +262,77 @@ namespace ItemPurposeCheckmarks
                 _logger.Error($"Could not get hideout productions: {ex.Message}");
                 return new ValueTask<string>(_httpResponseUtil.NullResponse());
             }
+        }
+
+        // --- Flea market reference price (low / average / high) ---
+        public ValueTask<string> HandleFleaPrice(GetMarketPriceRequestData request)
+        {
+            try
+            {
+                MongoId tpl = request.TemplateId;
+                (double Min, double? Avg, double Max) price = GetFleaPrice(tpl);
+                return new ValueTask<string>(
+                    _httpResponseUtil.NoBody(new
+                    {
+                        min = price.Min,
+                        avg = price.Avg,
+                        max = price.Max
+                    })
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.Error($"Exception caught when trying to generate flea price: {ex.Message}");
+                return new ValueTask<string>(_httpResponseUtil.NullResponse());
+            }
+        }
+
+        private (double Min, double? Avg, double Max) GetFleaPrice(MongoId tpl)
+        {
+            lock (_priceLock)
+            {
+                if (_fleaPriceCache.TryGetValue(tpl, out (double Min, double? Avg, double Max) cached))
+                {
+                    return cached;
+                }
+
+                (double Min, double? Avg, double Max) result;
+                try
+                {
+                    GetItemPriceResult prices = _ragfairController.GetItemMinAvgMaxFleaPriceValues(
+                        new GetMarketPriceRequestData { TemplateId = tpl },
+                        true
+                    );
+                    result = (prices.Min, prices.Avg, prices.Max);
+                }
+                catch (Exception ex)
+                {
+                    _logger.Warning($"Failed to get flea price for {tpl}, falling back to static price: {ex.Message}");
+                    result = (0, null, 0);
+                }
+
+                // When the item has no current flea offers, fall back to the static
+                // (handbook/prices.json) value so the reference line still shows up.
+                if (result.Max <= 0 || result.Min <= 0 || result.Avg is null)
+                {
+                    double staticPrice = GetStaticPrice(tpl);
+                    if (staticPrice > 0)
+                    {
+                        result.Min = result.Min > 0 ? result.Min : staticPrice;
+                        result.Max = result.Max > 0 ? result.Max : staticPrice;
+                        result.Avg ??= staticPrice;
+                    }
+                }
+
+                _fleaPriceCache[tpl] = result;
+                return result;
+            }
+        }
+
+        private double GetStaticPrice(MongoId tpl)
+        {
+            _staticPrices ??= _ragfairController.GetStaticPrices();
+            return _staticPrices.TryGetValue(tpl, out double price) ? price : 0;
         }
 
         // Traders are iterated in Traders enum order so the client can map names to assorts by index.

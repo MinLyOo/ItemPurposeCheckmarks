@@ -79,15 +79,23 @@ namespace ItemPurposeCheckmarks.Helpers
                             continue;
                         }
 
-                        string? offeredId = item["_tpl"]?.ToString();
-                        if (string.IsNullOrEmpty(offeredId))
+                        // The barter_scheme dict is keyed by the offer item's unique _id,
+                        // while the _tpl holds the actual item template id.
+                        string? offerKey = item["_id"]?.ToString();
+                        if (string.IsNullOrEmpty(offerKey))
                         {
                             continue;
                         }
 
-                        MongoID offeredTpl = offeredId;
+                        string? offeredTplRaw = item["_tpl"]?.ToString();
+                        if (string.IsNullOrEmpty(offeredTplRaw) || !Utils.IsValidMongoID(offeredTplRaw))
+                        {
+                            continue;
+                        }
 
-                        JArray? barters = barterScheme?[offeredId] as JArray;
+                        MongoID offeredTpl = offeredTplRaw;
+
+                        JArray? barters = barterScheme?[offerKey] as JArray;
                         if (barters is null)
                         {
                             continue;
@@ -122,7 +130,21 @@ namespace ItemPurposeCheckmarks.Helpers
                                     traderBarters.Add(priceId, offers);
                                 }
 
-                                offers.Add(new KeyValuePair<MongoID, int>(offeredTpl, count));
+                                // Same trader can list the same exchange at several loyalty
+                                // levels - keep only the cheapest required count so the
+                                // tooltip does not repeat identical lines.
+                                int index = offers.FindIndex(kv => kv.Key == offeredTpl);
+                                if (index >= 0)
+                                {
+                                    if (count < offers[index].Value)
+                                    {
+                                        offers[index] = new KeyValuePair<MongoID, int>(offeredTpl, count);
+                                    }
+                                }
+                                else
+                                {
+                                    offers.Add(new KeyValuePair<MongoID, int>(offeredTpl, count));
+                                }
                             }
                         }
                     }

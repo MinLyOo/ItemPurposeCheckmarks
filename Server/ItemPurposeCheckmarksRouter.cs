@@ -2,6 +2,7 @@ using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.DI;
 using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Eft.Common;
+using SPTarkov.Server.Core.Models.Eft.Ragfair;
 using SPTarkov.Server.Core.Models.Utils;
 using SPTarkov.Server.Core.Utils;
 
@@ -36,6 +37,10 @@ namespace ItemPurposeCheckmarks
             new RouteAction<EmptyRequestData>(
                 "/item-purpose-checkmarks/productions",
                 (url, info, sessionId, output, cancellationToken) => mod.HandleProductions()
+            ),
+            new RouteAction<GetMarketPriceRequestData>(
+                "/item-purpose-checkmarks/price",
+                (url, info, sessionId, output, cancellationToken) => mod.HandleFleaPrice(info)
             ),
         ]
     )

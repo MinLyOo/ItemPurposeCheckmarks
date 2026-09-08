@@ -1,5 +1,6 @@
 {
 	"aqc_in_stash": "In Stash: <color=#66FF66>{0}</color> (<color=#FFFF66>{1}</color> FiR)",
+	"aqc_price": "Reference price: {0}",
 	"aqc_total_needed": "Total needed: <color=#FFFF66>{0}</color>",
 	"aqc_total_needed_alt": "Total needed: <color=#FFFF66>{0}</color> FiR, <color=#FF6666>{1}</color> Non-FiR",
 	"aqc_active_quests": "Active quests:",
@@ -10,7 +11,7 @@
 	"aqc_hideout": "Hideout upgrades (total {0}/{1} needed):",
 	"aqc_hideout_entry": "{0} Lv{1} ({2}/{3})",
 	"aqc_barters": "Barters:",
-	"aqc_barter_for": "{0} x {1} for {2}",
+	"aqc_barter_line": "Trade {0} at {1} for {2}",
 	"aqc_crafts": "Crafting:",
 	"aqc_craft_into": "Crafts into: {0}",
 	"aqc_wishlist": "On your wishlist",
