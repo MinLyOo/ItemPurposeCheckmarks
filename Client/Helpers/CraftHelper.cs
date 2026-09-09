@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 namespace ItemPurposeCheckmarks.Helpers
 {
-    // Based on MoreCheckmarks (MIT, TommySoucy) crafting recipe parsing.
+    // Based on MoreCheckmarks (GPLv3, TommySoucy) crafting recipe parsing.
     // The server returns the hideout production table. We build two indexes:
     //   - recipeId -> endProductId (for showing what an ingredient crafts into)
     //   - ingredientTemplateId -> list of recipeIds (for flagging crafting ingredients)

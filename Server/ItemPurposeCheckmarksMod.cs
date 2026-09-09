@@ -20,7 +20,7 @@ using Path = System.IO.Path;
 namespace ItemPurposeCheckmarks
 {
     // Based on AllQuestsCheckmarks by ZGFueDkx (GPL-3.0).
-    // Extended with MoreCheckmarks (MIT, TommySoucy) server routes:
+    // Extended with MoreCheckmarks (GPLv3, TommySoucy) server routes:
     // trader assorts (barter), hideout productions (craft) and quest-exclusion config.
     [Injectable]
     public class ItemPurposeCheckmarksMod(

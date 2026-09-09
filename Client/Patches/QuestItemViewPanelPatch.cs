@@ -17,7 +17,7 @@ using ZGFueDkx.ZGCLib.Config;
 namespace ItemPurposeCheckmarks.Patches
 {
     // Based on AllQuestsCheckmarks by ZGFueDkx (GPL-3.0).
-    // Extended with MoreCheckmarks (MIT) dimensions: hideout materials, barter trades,
+    // Extended with MoreCheckmarks (GPLv3) dimensions: hideout materials, barter trades,
     // crafting recipes and wishlist. All feed the single QuestsHelper checkmark arbiter.
     internal class QuestItemViewPanelPatch : ModulePatch
     {

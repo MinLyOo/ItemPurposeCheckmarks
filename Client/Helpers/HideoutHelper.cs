@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 namespace ItemPurposeCheckmarks.Helpers
 {
-    // Based on MoreCheckmarks (MIT, TommySoucy) hideout material logic,
+    // Based on MoreCheckmarks (GPLv3, TommySoucy) hideout material logic,
     // adapted to SPT 4.1's HideoutRepresentation API.
     internal static class HideoutHelper
     {

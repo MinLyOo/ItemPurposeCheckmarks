@@ -5,7 +5,7 @@ using ZGFueDkx.ZGCLib.Config;
 namespace ItemPurposeCheckmarks.Helpers
 {
     // Based on AllQuestsCheckmarks by ZGFueDkx (GPL-3.0)
-    // Extended with MoreCheckmarks (MIT) information-dimension colors.
+    // Extended with MoreCheckmarks (GPLv3) information-dimension colors.
     // All display names are localized in Chinese; each info dimension has its own visibility toggle.
     internal static class Settings
     {

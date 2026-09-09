@@ -11,7 +11,7 @@ using UnityEngine;
 
 namespace ItemPurposeCheckmarks.Patches
 {
-    // Based on MoreCheckmarks (MIT, TommySoucy) "Take" action coloring.
+    // Based on MoreCheckmarks (GPLv3, TommySoucy) "Take" action coloring.
     // Adapted to SPT 4.1: the loose-loot action menu goes through
     // InteractionContextHelper.GetAvailableInteractionState, which is sealed off.
     // We patch InteractionContextHelper.GetAvailableActions(GamePlayerOwner, LootItem)

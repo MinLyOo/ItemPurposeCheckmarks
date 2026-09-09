@@ -7,7 +7,7 @@ using ZGFueDkx.ZGCLib.Helpers;
 
 namespace ItemPurposeCheckmarks.Helpers
 {
-    // Based on MoreCheckmarks (MIT, TommySoucy) barter parsing.
+    // Based on MoreCheckmarks (GPLv3, TommySoucy) barter parsing.
     // The client receives raw trader assorts JSON from the server and builds a
     // "barter currency -> offered items" index. Cash currencies are skipped.
     internal static class BarterHelper

@@ -12,7 +12,7 @@ using ZGFueDkx.ZGCLib.helpers;
 namespace ItemPurposeCheckmarks.Helpers
 {
     // Based on AllQuestsCheckmarks by ZGFueDkx (https://github.com/danx91/AllQuestsCheckmarks) - GPL-3.0
-    // Extended with MoreCheckmarks (MIT, TommySoucy) information dimensions:
+    // Extended with MoreCheckmarks (GPLv3, TommySoucy) information dimensions:
     // hideout upgrade materials, wishlist, barter trades and crafting recipes.
     internal static class QuestsHelper
     {

@@ -1,6 +1,6 @@
 ItemPurposeCheckmarks
 =====================
-基于 AllQuestsCheckmarks（ZGFueDkx, GPL-3.0）与 MoreCheckmarks（TommySoucy, MIT）融合而成的独立任务/用途勾选 Mod。
+基于 AllQuestsCheckmarks（ZGFueDkx, GPL-3.0）与 MoreCheckmarks（TommySoucy, GPLv3）融合而成的独立任务/用途勾选 Mod。
 支持 SPT 4.1+（测试环境: 4.1.3）。
 
 目标

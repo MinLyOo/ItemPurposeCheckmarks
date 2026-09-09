@@ -10,7 +10,7 @@ namespace ItemPurposeCheckmarks
 {
     // Static routes consumed by the BepInEx client plugin.
     // Based on AllQuestsCheckmarks by ZGFueDkx (GPL-3.0);
-    // assorts/trader-names/productions routes ported from MoreCheckmarks (MIT).
+    // assorts/trader-names/productions routes ported from MoreCheckmarks (GPLv3).
     [Injectable(TypePriority = OnLoadOrder.Routers + 1)]
     internal class ItemPurposeCheckmarksRouter(
         JsonUtil jsonUtil,

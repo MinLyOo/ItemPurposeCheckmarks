@@ -1,6 +1,6 @@
 # ItemPurposeCheckmarks — 构建与配置手册
 
-独立任务/用途勾选 Mod。继承 AllQuestsCheckmarks（AQC, GPL-3.0）的全部能力，并整合 MoreCheckmarks（MCM, MIT）的信息维度。
+独立任务/用途勾选 Mod。继承 AllQuestsCheckmarks（AQC, GPL-3.0）的全部能力，并整合 MoreCheckmarks（MCM, GPLv3）的信息维度。
 
 功能亮点：
 - 任务勾选（继承 AQC 全部能力）

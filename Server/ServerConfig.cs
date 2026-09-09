@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 namespace ItemPurposeCheckmarks
 {
     // User-editable server configuration, stored as config.json next to the mod DLL.
-    // Ported from MoreCheckmarks (MIT, TommySoucy) - quest exclusion configuration.
+    // Ported from MoreCheckmarks (GPLv3, TommySoucy) - quest exclusion configuration.
     public class ServerConfig
     {
         [JsonPropertyName("hideInactiveEventQuests")]
