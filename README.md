@@ -52,7 +52,11 @@ Compress-Archive -Path .\release\* -DestinationPath .\ItemPurposeCheckmarks-manu
 
 产物永远落在 `release/`，对游戏零侵入，可边开着游戏边 `dotnet build`。
 
-## 手动安装
+## 如何安装
+
+项目源码提供了已经构建好的产物，无需手动构建。直接将 `release/` 下的文件夹复制到根目录即可。
+
+您也可以在 [Releases](https://github.com/Trae-Dev/ItemPurposeCheckmarks/releases) 下载最新版本的手动安装包。
 
 把 `release/` 下两个子文件夹复制到目标目录（保持相对路径）：
 
@@ -62,6 +66,8 @@ Compress-Archive -Path .\release\* -DestinationPath .\ItemPurposeCheckmarks-manu
 | `release/SPT_Runtime/user/mods/ItemPurposeCheckmarks` | `{服务器目录}/user/mods/ItemPurposeCheckmarks`      |
 
 卸载 = 删除上述两个文件夹即可，无残留。
+
+为了方便管理Mod，建议您使用如 [SPT Mod Manager](https://github.com/Nevek20/SPT_Mod_Manager) 等Mod管理工具。方便批量安装、卸载、更新等操作，且与游戏目录隔离，无残留。
 
 ## 配置入口
 
@@ -80,6 +86,15 @@ Compress-Archive -Path .\release\* -DestinationPath .\ItemPurposeCheckmarks-manu
 ## 详细文档
 
 完整构建与配置说明见 [BUILD\_AND\_CONFIG.md](./BUILD_AND_CONFIG.md)。
+
+
+## 免责声明
+
+本融合Mod利用了AI辅助开发，mod虽经过多次测试，但仍可能存在未知Bug、兼容性问题或与未来 SPT 版本的适配缺陷。
+建议：
+- 使用前确保您已备份存档和服务器数据，以防止任何可能的损失。
+- 因使用本 Mod 造成的任何存档损坏、进度丢失或其他损失，恕不承担责任。
+- 如遇问题欢迎反馈，但不保证及时修复。
 
 ## 致谢
 
