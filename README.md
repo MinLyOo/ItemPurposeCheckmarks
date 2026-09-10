@@ -56,7 +56,7 @@ Compress-Archive -Path .\release\* -DestinationPath .\ItemPurposeCheckmarks-manu
 
 项目源码提供了已经构建好的产物，无需手动构建。直接将 `release/` 下的文件夹复制到根目录即可。
 
-您也可以在 [Releases](https://github.com/Trae-Dev/ItemPurposeCheckmarks/releases) 下载最新版本的手动安装包。
+您也可以在 [Releases](https://github.com/MinLyOo/ItemPurposeCheckmarks/releases) 下载最新版本的手动安装包。
 
 把 `release/` 下两个子文件夹复制到目标目录（保持相对路径）：
 
