@@ -12,7 +12,7 @@ namespace ItemPurposeCheckmarks
 {
     // Based on AllQuestsCheckmarks by ZGFueDkx (https://github.com/danx91/AllQuestsCheckmarks) - GPL-3.0
     [
-        BepInPlugin("com.kee.itempurposecheckmarks", "ItemPurposeCheckmarks", "1.0.0"),
+        BepInPlugin("com.kee.itempurposecheckmarks", "ItemPurposeCheckmarks", "1.1.0"),
         BepInDependency("com.SPT.core", "4.1.0"),
         BepInDependency("com.fika.core", BepInDependency.DependencyFlags.SoftDependency),
     ]

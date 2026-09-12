@@ -42,6 +42,10 @@ namespace ItemPurposeCheckmarks
                 "/item-purpose-checkmarks/price",
                 (url, info, sessionId, output, cancellationToken) => mod.HandleFleaPrice(info)
             ),
+            new RouteAction<BatchPriceRequestData>(
+                "/item-purpose-checkmarks/prices",
+                (url, info, sessionId, output, cancellationToken) => mod.HandleBatchFleaPrices(info)
+            ),
         ]
     )
     {
@@ -55,5 +59,6 @@ namespace ItemPurposeCheckmarks
         }
 
         private class ActiveQuestsRequestData : List<MongoId>, IRequestData;
+        private class BatchPriceRequestData : List<MongoId>, IRequestData;
     }
 }

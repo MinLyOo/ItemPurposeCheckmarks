@@ -37,8 +37,6 @@ namespace ItemPurposeCheckmarks.Helpers
                 JsonSettingsFactory.GetJsonSerializerSettings(Plugin.LogSource)
             );
 
-            Plugin.LogDebug(response);
-
             if (_squadData is null)
             {
                 Plugin.LogSource?.LogError("Failed to parse _squadData!");

@@ -3,6 +3,7 @@ using EFT;
 using EFT.Hideout;
 using EFT.InventoryLogic;
 using SPT.Reflection.Utils;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using ZGFueDkx.ZGCLib.helpers;
@@ -35,16 +36,31 @@ namespace ItemPurposeCheckmarks.Helpers
             public int Total => Fir + NonFir;
         }
 
+        private static DateTime _lastStashLogTime = DateTime.MinValue;
+
         public static ItemsCount GetItemsInStash(MongoID itemId)
         {
             ItemsCount itemsCount = new();
-            Profile profile = ClientAppUtils.GetClientApp().GetClientBackEndSession().Profile;
+            var session = ClientAppUtils.GetClientApp()?.GetClientBackEndSession();
+            if (session?.Profile is null)
+            {
+                return itemsCount;
+            }
+
+            Profile profile = session.Profile;
             IEnumerable<Item> items;
 
             // Diagnostics for the in-raid "stash shows 0" bug (only with debug logging on).
+            // Rate-limited to at most once every 5 seconds so browsing the stash doesn't
+            // flood the log.
             if (Settings.ShowDebug!.Value)
             {
-                Plugin.LogDebug($"StashCount item={itemId} inRaid={RaidUtils.IsInRaid()} cacheSize={_itemsCache.Count}");
+                DateTime now = DateTime.UtcNow;
+                if ((now - _lastStashLogTime).TotalSeconds >= 5)
+                {
+                    _lastStashLogTime = now;
+                    Plugin.LogDebug($"StashCount item={itemId} inRaid={RaidUtils.IsInRaid()} cacheSize={_itemsCache.Count}");
+                }
             }
 
             if (RaidUtils.IsInRaid())
@@ -118,6 +134,7 @@ namespace ItemPurposeCheckmarks.Helpers
         /// <summary>
         /// Counts how many of the given item are currently on the player's character
         /// (equipment + in-raid pockets/backpack), i.e. "on you" rather than in stash.
+        /// Returns 0 when the profile is not yet ready (first frame after menu).
         /// </summary>
         public static int GetOnYouCount(MongoID itemId)
         {
@@ -125,8 +142,13 @@ namespace ItemPurposeCheckmarks.Helpers
 
             try
             {
-                Profile profile = ClientAppUtils.GetClientApp().GetClientBackEndSession().Profile;
-                IEnumerable<Item> items = profile.Inventory.GetPlayerItems(EPlayerItems.Equipment | EPlayerItems.QuestItems)
+                var session = ClientAppUtils.GetClientApp()?.GetClientBackEndSession();
+                if (session?.Profile is null)
+                {
+                    return 0;
+                }
+
+                IEnumerable<Item> items = session.Profile.Inventory.GetPlayerItems(EPlayerItems.Equipment | EPlayerItems.QuestItems)
                     .Where(i => i.TemplateId == itemId);
 
                 foreach (Item item in items)
@@ -134,9 +156,9 @@ namespace ItemPurposeCheckmarks.Helpers
                     count += item.StackObjectsCount;
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                // Profile may not be ready; just report zero.
+                Plugin.LogDebug($"GetOnYouCount failed: {ex.GetType().Name}: {ex.Message}");
             }
 
             return count;

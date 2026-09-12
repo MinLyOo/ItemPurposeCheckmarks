@@ -9,7 +9,7 @@
 
 - 客户端：BepInEx 插件（`netstandard2.1`）
 - 服务端：SPT 编译型 mod（`net10.0`，SPTushonka 4.1.3）
-- 版本：1.0.0（SPT ≥ 4.1，测试 4.1.3）
+- 版本：1.1.0（SPT ≥ 4.1，测试 4.1.3）
 
 ---
 
@@ -226,6 +226,8 @@ First Blood [Prapor] = 59f9d81586f7742a6d4b1f4c ...
 | `/item-purpose-checkmarks/assorts` | 全商人 barter 货物（Fence 走 FenceService） |
 | `/item-purpose-checkmarks/trader-names` | 按商人枚举顺序对齐的名称 |
 | `/item-purpose-checkmarks/productions` | 藏身处制造配方 |
+| `/item-purpose-checkmarks/price` | 单个物品跳蚤参考价 |
+| `/item-purpose-checkmarks/prices` | 批量物品跳蚤参考价（减少服务端日志刷屏） |
 
 ---
 

@@ -173,11 +173,21 @@ namespace ItemPurposeCheckmarks
         private List<QuestStripped> GetActiveQuests(MongoId profileId)
         {
             List<QuestStripped> quests = [];
-            PmcData? profile = _profileHelper.GetPmcProfile(profileId);
+            PmcData? profile;
+
+            try
+            {
+                profile = _profileHelper.GetPmcProfile(profileId);
+            }
+            catch
+            {
+                // Profile no longer on this server (disconnected Fika squad member, etc.).
+                return quests;
+            }
 
             if (profile is null || profile.Quests is not List<QuestStatus> profileQuests)
             {
-                _logger.Error($"Failed to retrieve user profile or info: {profileId}");
+                _logger.Debug($"Failed to retrieve user profile or info: {profileId}");
                 return quests;
             }
 
@@ -283,6 +293,31 @@ namespace ItemPurposeCheckmarks
             catch (Exception ex)
             {
                 _logger.Error($"Exception caught when trying to generate flea price: {ex.Message}");
+                return new ValueTask<string>(_httpResponseUtil.NullResponse());
+            }
+        }
+
+        public ValueTask<string> HandleBatchFleaPrices(List<MongoId> templateIds)
+        {
+            try
+            {
+                var prices = new Dictionary<string, object>();
+                foreach (MongoId tpl in templateIds)
+                {
+                    (double Min, double? Avg, double Max) price = GetFleaPrice(tpl);
+                    prices[tpl] = new
+                    {
+                        min = price.Min,
+                        avg = price.Avg,
+                        max = price.Max
+                    };
+                }
+
+                return new ValueTask<string>(_httpResponseUtil.NoBody(prices));
+            }
+            catch (Exception ex)
+            {
+                _logger.Error($"Exception caught when trying to generate batch flea prices: {ex.Message}");
                 return new ValueTask<string>(_httpResponseUtil.NullResponse());
             }
         }

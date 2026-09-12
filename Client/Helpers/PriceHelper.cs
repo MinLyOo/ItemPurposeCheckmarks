@@ -40,6 +40,12 @@ namespace ItemPurposeCheckmarks.Helpers
 
         private static bool _workerActive;
 
+        // Rate-limit: at most one batch price request per 30 seconds.
+        // Prevents flooding the server console with "[客户端请求]" logs even when
+        // the player rapidly browses different stash containers or item screens.
+        private static DateTime _lastBatchTime = DateTime.MinValue;
+        private static readonly TimeSpan _batchMinInterval = TimeSpan.FromSeconds(30);
+
         /// <summary>Resolves the configured tier and returns a colorized "<number> ₽" line, or null when unavailable.</summary>
         public static string? GetPriceLine(MongoID templateId)
         {
@@ -105,6 +111,13 @@ namespace ItemPurposeCheckmarks.Helpers
                 return;
             }
 
+            // Rate-limit: don't start a new worker within 30s of the last batch
+            // so rapid stash browsing doesn't produce a server log line each time.
+            if (DateTime.UtcNow - _lastBatchTime < _batchMinInterval)
+            {
+                return;
+            }
+
             _workerActive = true;
             Thread worker = new(WorkerLoop)
             {
@@ -118,7 +131,7 @@ namespace ItemPurposeCheckmarks.Helpers
         {
             while (true)
             {
-                MongoID templateId;
+                List<MongoID> batch;
                 lock (CacheLock)
                 {
                     if (Pending.Count == 0)
@@ -127,43 +140,84 @@ namespace ItemPurposeCheckmarks.Helpers
                         return;
                     }
 
-                    templateId = Pending.Dequeue();
+                    batch = [.. Pending];
+                    Pending.Clear();
                 }
 
-                // Network call happens outside the lock so one slow request does
-                // not block the UI thread or other queued lookups.
-                ItemPrice? price = Fetch(templateId);
-
-                lock (CacheLock)
+                // Rate-limit guard inside the loop too, in case the worker was
+                // started before _lastBatchTime was updated by a concurrent batch.
+                TimeSpan elapsed = DateTime.UtcNow - _lastBatchTime;
+                if (elapsed < _batchMinInterval)
                 {
-                    PriceCache[templateId] = price;
+                    // Too soon – re-queue items and wait.
+                    int sleepMs = (int)(_batchMinInterval - elapsed).TotalMilliseconds + 100;
+                    Thread.Sleep(sleepMs);
+                    lock (CacheLock)
+                    {
+                        foreach (MongoID id in batch)
+                        {
+                            if (!PriceCache.ContainsKey(id))
+                            {
+                                Pending.Enqueue(id);
+                            }
+                        }
+                    }
+                    continue;
                 }
+
+                // Single batch network call outside the lock so the UI thread
+                // never blocks. All results are cached at once, replacing the
+                // previous one-by-one request pattern that flooded the server log.
+                _lastBatchTime = DateTime.UtcNow;
+                BatchFetch(batch);
             }
         }
 
-        private static ItemPrice? Fetch(MongoID templateId)
+        private static void BatchFetch(List<MongoID> templateIds)
         {
             try
             {
-                string body = JsonConvert.SerializeObject(new { templateId = templateId.ToString() });
-                string response = RequestHandler.PostJson("/item-purpose-checkmarks/price", body);
+                List<string> ids = [];
+                foreach (MongoID tpl in templateIds)
+                {
+                    ids.Add(tpl.ToString());
+                }
+
+                string body = JsonConvert.SerializeObject(ids);
+                string response = RequestHandler.PostJson("/item-purpose-checkmarks/prices", body);
                 if (string.IsNullOrEmpty(response) || response == "null")
                 {
-                    return null;
+                    return;
                 }
 
                 JObject data = JObject.Parse(response);
-                return new ItemPrice
+                lock (CacheLock)
                 {
-                    Min = data.Value<double?>("min") ?? 0,
-                    Avg = data.Value<double?>("avg"),
-                    Max = data.Value<double?>("max") ?? 0,
-                };
+                    foreach (MongoID tpl in templateIds)
+                    {
+                        JToken? entry = data[tpl.ToString()];
+                        PriceCache[tpl] = entry is null
+                            ? null
+                            : new ItemPrice
+                            {
+                                Min = entry.Value<double?>("min") ?? 0,
+                                Avg = entry.Value<double?>("avg"),
+                                Max = entry.Value<double?>("max") ?? 0,
+                            };
+                    }
+                }
             }
             catch (Exception ex)
             {
-                Plugin.LogDebug($"Failed to fetch flea price for {templateId}: {ex.Message}");
-                return null;
+                Plugin.LogDebug($"Failed to batch fetch flea prices: {ex.Message}");
+                // Mark all as null so they are not retried.
+                lock (CacheLock)
+                {
+                    foreach (MongoID tpl in templateIds)
+                    {
+                        PriceCache[tpl] = null;
+                    }
+                }
             }
         }
 

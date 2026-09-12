@@ -9,7 +9,7 @@ namespace ItemPurposeCheckmarks
         public string Name { get; init; } = "ItemPurposeCheckmarks";
         public string Author { get; init; } = "kee";
         public List<string>? Contributors { get; init; } = ["ZGFueDkx (AllQuestsCheckmarks, GPL-3.0)", "TommySoucy (MoreCheckmarks, GPLv3)"];
-        public SemanticVersioning.Version Version { get; init; } = new("1.0.0");
+        public SemanticVersioning.Version Version { get; init; } = new("1.1.0");
         public SemanticVersioning.Range SptVersion { get; init; } = new("~4.1.0");
         public List<string>? Incompatibilities { get; init; } =
         [

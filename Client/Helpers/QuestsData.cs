@@ -55,16 +55,19 @@ namespace ItemPurposeCheckmarks.Helpers
             Plugin.LogSource?.LogInfo("Requesting quests data...");
 
             string response = RequestHandler.GetJson("/item-purpose-checkmarks/quests");
-            _questsData = JsonConvert.DeserializeObject<List<QuestJson>>(response, JsonSettingsFactory.GetJsonSerializerSettings(Plugin.LogSource));
 
-            Plugin.LogDebug(response);
-
-            if (_questsData is null)
+            // Parse into a local variable first so a bad server response never
+            // clobbers the current _questsData. When parsing fails the old data
+            // stays valid and task checkmarks keep working until the next reload.
+            var parsed = JsonConvert.DeserializeObject<List<QuestJson>>(response, JsonSettingsFactory.GetJsonSerializerSettings(Plugin.LogSource));
+            if (parsed is null)
             {
-                Plugin.LogSource?.LogError("Failed to parse _questsData!");
+                Plugin.LogSource?.LogError("Failed to parse _questsData! Keeping previous data.");
                 Plugin.LogSource?.LogError(response);
                 return;
             }
+
+            _questsData = parsed;
 
             CheckUnreachableQuests();
             ParseData();
